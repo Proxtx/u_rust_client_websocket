@@ -32,8 +32,12 @@ impl BLEManager {
   }
 
   pub async fn connect(&mut self, address: &str) -> bool {
-    if let None = self.connected_peripheral { 
-      return false; 
+    match self.connected_peripheral {
+      Some(_) => {
+        return false;
+      }
+      None => {
+      }
     }
 
     for p in self.peripherals().await {
