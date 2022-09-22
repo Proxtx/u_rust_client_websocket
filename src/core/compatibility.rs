@@ -19,11 +19,16 @@ impl Compatibility {
     }
   }
 
-  pub async fn execute (&mut self, websocket: &mut websocket::SocketConnection, data: serde_json::Value, id: String) {
+  pub async fn execute (&mut self, websocket: &mut websocket::SocketConnection, data: serde_json::Value, id: String, authenticated: bool) {
     let args: Vec<String> = std::env::args().collect();
 
     let parsed_data: CoreData = serde_json::from_value(data).unwrap();
     println!("{}", parsed_data.export);
+
+    if !authenticated && parsed_data.export != "id" {
+      return;
+    }
+
     match parsed_data.export.as_str() {
       "services" => {
         parsed_data.arguments.iter();

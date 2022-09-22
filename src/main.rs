@@ -9,7 +9,8 @@ mod core;
 struct ServiceRequest {
     service: String,
     id: String,
-    data: serde_json::Value
+    data: serde_json::Value,
+    auth: String
 }
 #[tokio::main]
 async fn main () {
@@ -22,7 +23,7 @@ async fn run() -> bool {
 
     let args: Vec<String> = std::env::args().collect();
 
-    let mut socket_connection = SocketConnection::new(&args[3]);
+    let mut socket_connection = SocketConnection::new(&args[4]);
 
     println!("System initialized!");
 
@@ -33,11 +34,14 @@ async fn run() -> bool {
             Ok(request) => {
                 match request.service.as_str() {
                     "ble" => {
+                        if request.auth != args[3] {
+                            continue;
+                        }
                         ble_compatibility.execute(&mut socket_connection, request.data, request.id).await;
                     }
 
                     "core" => {
-                        core_compatibility.execute(&mut socket_connection, request.data, request.id).await;
+                        core_compatibility.execute(&mut socket_connection, request.data, request.id, request.auth == args[3]).await;
                         if core_compatibility.restart {
                             return true;
                         }
