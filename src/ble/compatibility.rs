@@ -33,7 +33,16 @@ impl Compatibility {
   }
 
   pub async fn execute (&mut self, websocket: &mut websocket::SocketConnection, data: serde_json::Value, id: String) {
-    let parsed_data: BLEData = serde_json::from_value(data).unwrap();
+    let parsed_data: BLEData;
+    match serde_json::from_value(data) {
+      Ok(parsed_data_wrapped) => {
+        parsed_data=parsed_data_wrapped;
+      }
+      Err(_) => {
+        return;
+      }
+    }
+    
     println!("{}", parsed_data.export);
     match parsed_data.export.as_str() {
       "start_scan" => {
