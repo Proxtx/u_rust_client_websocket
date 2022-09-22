@@ -9,13 +9,13 @@ struct CoreData{
 }
 
 pub struct Compatibility {
-
+  pub restart: bool
 }
 
 impl Compatibility {
   pub async fn new () -> Self {
     Compatibility {
-
+      restart: false
     }
   }
 
@@ -26,6 +26,14 @@ impl Compatibility {
       "services" => {
         parsed_data.arguments.iter();
         websocket.send(&serde_json::json!({"id": id, "result": ["core", "ble"]}).to_string());
+      },
+      "id" => {
+        let args: Vec<String> = std::env::args().collect();
+        websocket.send(&serde_json::json!({"id": id, "result": args[1]}).to_string());
+      }
+      "restart" => {
+        self.restart = true;
+        websocket.send(&serde_json::json!({"id": id}).to_string());
       }
       _ => println!("Export not found!") 
     }

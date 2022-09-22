@@ -4,7 +4,7 @@ use btleplug::platform::{Adapter, Manager, Peripheral};
 pub struct BLEManager {
   scanning: bool,
   central: Adapter,
-  connected_peripheral: Option<Peripheral>
+  pub connected_peripheral: Option<Peripheral>
 }
 
 impl BLEManager {
@@ -32,6 +32,10 @@ impl BLEManager {
   }
 
   pub async fn connect(&mut self, address: &str) -> bool {
+    if let None = self.connected_peripheral { 
+      return false; 
+    }
+
     for p in self.peripherals().await {
       if p.properties().await.unwrap().unwrap().address.to_string() == address {
         match p.connect().await {
@@ -88,6 +92,20 @@ impl BLEManager {
       }
       
       Err(_) => {
+        return false;
+      }
+    }
+  }
+
+  pub async fn disconnect (&mut self) -> bool {
+    match &self.connected_peripheral {
+      Some(peripheral) => {
+        peripheral.disconnect().await.unwrap();
+        self.connected_peripheral = Option::None;
+        return true;
+      }
+
+      None => {
         return false;
       }
     }

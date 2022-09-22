@@ -73,6 +73,17 @@ impl Compatibility {
         let arg2: Vec<u8> = serde_json::from_value(args_iter.next().unwrap()).unwrap();
         websocket.send(&serde_json::json!({"id": id, "result": self.ble.write_to_uuid(arg1, arg2).await}).to_string());
       }
+      "connected_status" => {
+        let mut connected = true;
+        if let None = self.ble.connected_peripheral {
+          connected = false;
+        }
+        websocket.send(&serde_json::json!({"id": id, "result": connected}).to_string());
+      }
+
+      "disconnect" => {
+        websocket.send(&serde_json::json!({"id": id, "result": self.ble.disconnect().await}).to_string())
+      }
 
       _ => println!("export not found")
     }

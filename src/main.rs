@@ -2,8 +2,6 @@ mod websocket;
 use websocket::SocketConnection;
 use serde::{Deserialize};
 
-use std::env;
-
 mod ble;
 mod core;
 
@@ -13,15 +11,21 @@ struct ServiceRequest {
     id: String,
     data: serde_json::Value
 }
-
 #[tokio::main]
-async fn main() {
+async fn main () {
+    while run().await {}
+}
+
+async fn run() -> bool {
     let mut ble_compatibility = ble::compatibility::Compatibility::new().await;
     let mut core_compatibility = core::compatibility::Compatibility::new().await;
 
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
 
-    let mut socket_connection = SocketConnection::new(&args[1]);
+    let mut socket_connection = SocketConnection::new(&args[2]);
+
+    println!("System initialized!");
+
     loop {
         let msg = socket_connection.read_message();
         let request_boxed: Result<ServiceRequest, serde_json::Error> = serde_json::from_str(&msg);
@@ -34,6 +38,9 @@ async fn main() {
 
                     "core" => {
                         core_compatibility.execute(&mut socket_connection, request.data, request.id).await;
+                        if core_compatibility.restart {
+                            return true;
+                        }
                     }
 
                     _ => {
