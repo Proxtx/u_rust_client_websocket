@@ -55,5 +55,7 @@ async fn run() -> bool {
 
             Err(_) => println!("Could not parse the servers message: {}", msg)
         }
+
+        println!("Request processed.")
     }
 }
