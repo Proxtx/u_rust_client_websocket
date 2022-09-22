@@ -22,7 +22,7 @@ async fn run() -> bool {
 
     let args: Vec<String> = std::env::args().collect();
 
-    let mut socket_connection = SocketConnection::new(&args[2]);
+    let mut socket_connection = SocketConnection::new(&args[3]);
 
     println!("System initialized!");
 

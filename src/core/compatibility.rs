@@ -20,6 +20,8 @@ impl Compatibility {
   }
 
   pub async fn execute (&mut self, websocket: &mut websocket::SocketConnection, data: serde_json::Value, id: String) {
+    let args: Vec<String> = std::env::args().collect();
+
     let parsed_data: CoreData = serde_json::from_value(data).unwrap();
     println!("{}", parsed_data.export);
     match parsed_data.export.as_str() {
@@ -28,9 +30,11 @@ impl Compatibility {
         websocket.send(&serde_json::json!({"id": id, "result": ["core", "ble"]}).to_string());
       },
       "id" => {
-        let args: Vec<String> = std::env::args().collect();
         websocket.send(&serde_json::json!({"id": id, "result": args[1]}).to_string());
-      }
+      },
+      "key" => {
+        websocket.send(&serde_json::json!({"id": id, "result": args[2]}).to_string());
+      },
       "restart" => {
         self.restart = true;
         websocket.send(&serde_json::json!({"id": id}).to_string());
