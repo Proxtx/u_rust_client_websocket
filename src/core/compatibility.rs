@@ -33,8 +33,7 @@ impl Compatibility {
     }
 
     println!("{}", parsed_data.export);
-
-    if !authenticated && (parsed_data.export != "id" || parsed_data.export != "key") {
+    if !authenticated && (parsed_data.export != "id" && parsed_data.export != "key") {
       return;
     }
 
