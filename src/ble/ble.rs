@@ -22,9 +22,19 @@ impl BLEManager {
     }
   }
 
-  pub async fn start_scan (&mut self) {
-    self.central.start_scan(ScanFilter::default()).await.unwrap();
+  pub async fn start_scan (&mut self) -> bool{
+    match self.central.start_scan(ScanFilter::default()).await {
+      Ok(_) => {}
+      Err(_) => {
+        if self.scanning {
+          return true;
+        }
+        return false;
+      }
+    };
     self.scanning = true;
+
+    return true;
   }
 
   pub async fn peripherals(&mut self) -> Vec<Peripheral> {
