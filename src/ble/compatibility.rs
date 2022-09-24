@@ -1,5 +1,6 @@
 use btleplug::api::{Peripheral as _,};
 
+
 use crate::ble::ble;
 use ble::BLEManager;
 
@@ -42,7 +43,7 @@ impl Compatibility {
         return;
       }
     }
-    
+
     println!("{}", parsed_data.export);
     match parsed_data.export.as_str() {
       "start_scan" => {

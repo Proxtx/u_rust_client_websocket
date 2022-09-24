@@ -1,29 +1,33 @@
-mod websocket;
+use clap::Parser;
+use serde::Deserialize;
 use websocket::SocketConnection;
-use serde::{Deserialize};
 
+mod args;
 mod ble;
 mod core;
+mod websocket;
 
 #[derive(Deserialize)]
 struct ServiceRequest {
     service: String,
     id: String,
     data: serde_json::Value,
-    auth: String
+    auth: String,
 }
+
 #[tokio::main]
-async fn main () {
+async fn main() {
     while run().await {}
 }
 
 async fn run() -> bool {
+    #[cfg(feature = "ble")]
     let mut ble_compatibility = ble::compatibility::Compatibility::new().await;
     let mut core_compatibility = core::compatibility::Compatibility::new().await;
 
-    let args: Vec<String> = std::env::args().collect();
+    let args = args::Args::parse();
 
-    let mut socket_connection = SocketConnection::new(&args[4]);
+    let mut socket_connection = SocketConnection::new(&args.ws_url);
 
     println!("System initialized!");
 
@@ -31,29 +35,36 @@ async fn run() -> bool {
         let msg = socket_connection.read_message();
         let request_boxed: Result<ServiceRequest, serde_json::Error> = serde_json::from_str(&msg);
         match request_boxed {
-            Ok(request) => {
-                match request.service.as_str() {
-                    "ble" => {
-                        if request.auth != args[3] {
-                            continue;
-                        }
-                        ble_compatibility.execute(&mut socket_connection, request.data, request.id).await;
+            Ok(request) => match request.service.as_str() {
+                #[cfg(feature = "ble")]
+                "ble" => {
+                    if request.auth != args.auth {
+                        continue;
                     }
+                    ble_compatibility
+                        .execute(&mut socket_connection, request.data, request.id)
+                        .await;
+                }
 
-                    "core" => {
-                        core_compatibility.execute(&mut socket_connection, request.data, request.id, request.auth == args[3]).await;
-                        if core_compatibility.restart {
-                            return true;
-                        }
-                    }
-
-                    _ => {
-
+                "core" => {
+                    core_compatibility
+                        .execute(
+                            &mut socket_connection,
+                            request.data,
+                            request.id,
+                            request.auth == args.auth,
+                            &args,
+                        )
+                        .await;
+                    if core_compatibility.restart {
+                        return true;
                     }
                 }
-            }
 
-            Err(_) => println!("Could not parse the servers message: {}", msg)
+                _ => {}
+            },
+
+            Err(_) => println!("Could not parse the servers message: {}", msg),
         }
 
         println!("Request processed.")

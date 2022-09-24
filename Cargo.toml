@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-btleplug = { version = "0.10", features = ["serde"] }
+btleplug = { version = "0.10", features = ["serde"], optional = true }
+
 tokio = { version = "1", features = ["full"] }
 
 tungstenite = {version = "0.16.0", features = ["native-tls"]}
@@ -14,3 +15,7 @@ url = "2.2.2"
 
 serde = { version = "1.0.132", features = ["derive"] }
 serde_json = "1.0.59"
+clap = { version = "3.2.22", features = ["derive"] }
+
+[features]
+ble=["dep:btleplug"]
