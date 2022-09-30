@@ -113,11 +113,16 @@ impl BLEManager {
 
     pub async fn disconnect(&mut self) -> bool {
         match &self.connected_peripheral {
-            Some(peripheral) => {
-                peripheral.disconnect().await.unwrap();
-                self.connected_peripheral = Option::None;
-                return true;
-            }
+            Some(peripheral) => match peripheral.disconnect().await {
+                Ok(_) => {
+                    self.connected_peripheral = Option::None;
+                    return true;
+                }
+                Err(_) => {
+                    self.connected_peripheral = Option::None;
+                    return false;
+                }
+            },
 
             None => {
                 return false;
