@@ -6,6 +6,7 @@ use crate::args::Args;
 #[derive(Deserialize)]
 struct CoreData {
     export: String,
+    #[allow(dead_code)]
     arguments: Vec<serde_json::Value>,
 }
 

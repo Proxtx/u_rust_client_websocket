@@ -34,7 +34,7 @@ impl Http {
                     .client
                     .post(url)
                     .body(body.to_owned())
-                    .header("content-type", "application/json")
+                    .header("content-type", content_type)
                     .send()
                     .await;
             }
