@@ -1,11 +1,19 @@
 use clap::Parser;
 use serde::Deserialize;
+use std::collections::HashMap;
 use websocket::SocketConnection;
 
+use crate::compatibility::CompatibilityBehavior;
+
 mod args;
-mod ble;
+mod compatibility;
 mod core;
 mod websocket;
+
+#[cfg(feature = "ble")]
+mod ble;
+#[cfg(feature = "http")]
+mod http;
 
 #[derive(Deserialize)]
 struct ServiceRequest {
@@ -21,8 +29,19 @@ async fn main() {
 }
 
 async fn run() -> bool {
+    let mut service_map: HashMap<String, Box<dyn CompatibilityBehavior>> = HashMap::new();
+
     #[cfg(feature = "ble")]
-    let mut ble_compatibility = ble::compatibility::Compatibility::new().await;
+    service_map.insert(
+        String::from("ble"),
+        Box::from(ble::compatibility::Compatibility::new().await),
+    );
+    #[cfg(features = "http")]
+    service_map.insert(
+        String::from("http"),
+        Box::from(http::compatibility::Compatibility::new().await),
+    );
+
     let mut core_compatibility = core::compatibility::Compatibility::new().await;
 
     let args = args::Args::parse();
@@ -34,37 +53,37 @@ async fn run() -> bool {
     loop {
         let msg = socket_connection.read_message();
         let request_boxed: Result<ServiceRequest, serde_json::Error> = serde_json::from_str(&msg);
+        let request;
         match request_boxed {
-            Ok(request) => match request.service.as_str() {
-                #[cfg(feature = "ble")]
-                "ble" => {
-                    if request.auth != args.auth {
-                        continue;
-                    }
-                    ble_compatibility
-                        .execute(&mut socket_connection, request.data, request.id)
-                        .await;
-                }
+            Ok(request_inner) => request = request_inner,
+            Err(_) => {
+                println!("Could not parse the servers message: {}", msg);
+                continue;
+            }
+        }
 
-                "core" => {
-                    core_compatibility
-                        .execute(
-                            &mut socket_connection,
-                            request.data,
-                            request.id,
-                            request.auth == args.auth,
-                            &args,
-                        )
-                        .await;
-                    if core_compatibility.restart {
-                        return true;
-                    }
-                }
+        if request.service == "core" {
+            core_compatibility
+                .execute(
+                    &mut socket_connection,
+                    request.data,
+                    request.id,
+                    request.auth == args.auth,
+                    &args,
+                )
+                .await;
+            if core_compatibility.restart {
+                return true;
+            }
+            continue;
+        }
 
-                _ => {}
-            },
-
-            Err(_) => println!("Could not parse the servers message: {}", msg),
+        if service_map.contains_key(&request.service) {
+            service_map
+                .get_mut(&request.service)
+                .unwrap()
+                .execute(&mut socket_connection, request.data, request.id)
+                .await;
         }
 
         println!("Request processed.")

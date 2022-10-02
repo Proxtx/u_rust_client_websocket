@@ -3,6 +3,7 @@ use std::str::FromStr;
 use btleplug::api::Peripheral as _;
 
 use crate::ble::ble;
+use crate::compatibility::CompatibilityBehavior;
 use ble::BLEManager;
 
 use crate::websocket;
@@ -27,14 +28,15 @@ pub struct Compatibility {
     ble: BLEManager,
 }
 
-impl Compatibility {
-    pub async fn new() -> Self {
+#[async_trait::async_trait]
+impl CompatibilityBehavior for Compatibility {
+    async fn new() -> Self {
         Compatibility {
             ble: BLEManager::new().await,
         }
     }
 
-    pub async fn execute(
+    async fn execute(
         &mut self,
         websocket: &mut websocket::SocketConnection,
         data: serde_json::Value,

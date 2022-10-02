@@ -1,4 +1,4 @@
 {
-  "rust-analyzer.cargo.features": ["ble"],
+  "rust-analyzer.cargo.features": ["ble", "http"],
   "rust-analyzer.procMacro.enable": false
 }
