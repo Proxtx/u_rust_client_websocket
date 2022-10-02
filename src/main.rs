@@ -36,7 +36,7 @@ async fn run() -> bool {
         String::from("ble"),
         Box::from(ble::compatibility::Compatibility::new().await),
     );
-    #[cfg(features = "http")]
+    #[cfg(feature = "http")]
     service_map.insert(
         String::from("http"),
         Box::from(http::compatibility::Compatibility::new().await),
@@ -70,11 +70,13 @@ async fn run() -> bool {
                     request.id,
                     request.auth == args.auth,
                     &args,
+                    service_map.keys().cloned().collect(),
                 )
                 .await;
             if core_compatibility.restart {
                 return true;
             }
+            println!("Request processed.");
             continue;
         }
 

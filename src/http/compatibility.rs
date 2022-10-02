@@ -27,24 +27,31 @@ impl CompatibilityBehavior for Compatibility {
         data: serde_json::Value,
         id: String,
     ) {
-        let data: HttpData = serde_json::from_value(data).unwrap();
+        let parsed_data: HttpData;
+        match serde_json::from_value(data) {
+            Ok(parsed_data_wrapped) => {
+                parsed_data = parsed_data_wrapped;
+            }
+            Err(_) => {
+                return;
+            }
+        }
 
-        match data.export.as_str() {
+        println!("{}", parsed_data.export);
+
+        match parsed_data.export.as_str() {
             "request" => {
                 let result = self
                     .http
                     .request(
-                        data.arguments[0].as_str().unwrap(),
-                        data.arguments[1].as_str().unwrap(),
-                        data.arguments[2].as_str().unwrap(),
+                        parsed_data.arguments[0].as_str().unwrap(),
+                        parsed_data.arguments[1].as_str().unwrap(),
+                        parsed_data.arguments[2].as_str().unwrap(),
+                        parsed_data.arguments[3].as_str().unwrap(),
                     )
                     .await;
 
-                websocket.send(
-                    serde_json::json!({"id": id, "result": result})
-                        .as_str()
-                        .unwrap(),
-                )
+                websocket.send(&serde_json::json!({"id": id, "result": result}).to_string())
             }
 
             _ => {

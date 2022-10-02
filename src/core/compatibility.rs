@@ -25,6 +25,7 @@ impl Compatibility {
         id: String,
         authenticated: bool,
         args: &Args,
+        services: Vec<String>,
     ) {
         let parsed_data: CoreData;
         match serde_json::from_value(data) {
@@ -43,15 +44,7 @@ impl Compatibility {
 
         match parsed_data.export.as_str() {
             "services" => {
-                let mut features: Vec<&str> = vec!["core"];
-
-                #[cfg(feature = "ble")]
-                {
-                    features.push("ble");
-                }
-
-                parsed_data.arguments.iter();
-                websocket.send(&serde_json::json!({"id": id, "result": features}).to_string());
+                websocket.send(&serde_json::json!({"id": id, "result": services}).to_string());
             }
             "id" => {
                 websocket.send(&serde_json::json!({"id": id, "result": args.id}).to_string());

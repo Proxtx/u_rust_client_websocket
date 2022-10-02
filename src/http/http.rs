@@ -19,7 +19,13 @@ impl Http {
         }
     }
 
-    pub async fn request(&self, method: &str, url: &str, body: &str) -> RequestResult {
+    pub async fn request(
+        &self,
+        method: &str,
+        url: &str,
+        body: &str,
+        content_type: &str,
+    ) -> RequestResult {
         let result;
 
         match method {
@@ -27,7 +33,8 @@ impl Http {
                 result = self
                     .client
                     .post(url)
-                    .body(Vec::from(body.as_bytes()))
+                    .body(body.to_owned())
+                    .header("content-type", "application/json")
                     .send()
                     .await;
             }
