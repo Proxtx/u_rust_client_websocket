@@ -14,6 +14,8 @@ mod websocket;
 
 #[cfg(feature = "ble")]
 mod ble;
+#[cfg(feature = "command")]
+mod command;
 #[cfg(feature = "http")]
 mod http;
 #[cfg(feature = "win_notification")]
@@ -50,6 +52,12 @@ async fn run() -> bool {
     service_map.insert(
         String::from("win_notification"),
         Box::from(win_notification::compatibility::Compatibility::new().await),
+    );
+
+    #[cfg(feature = "command")]
+    service_map.insert(
+        String::from("command"),
+        Box::from(command::compatibility::Compatibility::new().await),
     );
 
     let mut core_compatibility = core::compatibility::Compatibility::new().await;

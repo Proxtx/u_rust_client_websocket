@@ -27,3 +27,4 @@ async-trait = "0.1.57"
 ble=["dep:btleplug", "dep:uuid"]
 http=["dep:reqwest"]
 win_notification=["dep:winrt-notification"]
+command=[]
