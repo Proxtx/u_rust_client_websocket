@@ -1,4 +1,4 @@
 {
-  "rust-analyzer.cargo.features": ["ble", "http"],
+  "rust-analyzer.cargo.features": ["ble", "http", "win_notification"],
   "rust-analyzer.procMacro.enable": false
 }

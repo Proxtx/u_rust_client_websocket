@@ -14,6 +14,8 @@ mod websocket;
 mod ble;
 #[cfg(feature = "http")]
 mod http;
+#[cfg(feature = "win_notification")]
+mod win_notification;
 
 #[derive(Deserialize)]
 struct ServiceRequest {
@@ -40,6 +42,12 @@ async fn run() -> bool {
     service_map.insert(
         String::from("http"),
         Box::from(http::compatibility::Compatibility::new().await),
+    );
+
+    #[cfg(feature = "win_notification")]
+    service_map.insert(
+        String::from("win_notification"),
+        Box::from(win_notification::compatibility::Compatibility::new().await),
     );
 
     let mut core_compatibility = core::compatibility::Compatibility::new().await;
