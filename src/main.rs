@@ -18,6 +18,8 @@ mod ble;
 mod command;
 #[cfg(feature = "http")]
 mod http;
+#[cfg(feature = "simulate")]
+mod simulate;
 #[cfg(feature = "win_notification")]
 mod win_notification;
 
@@ -58,6 +60,12 @@ async fn run() -> bool {
     service_map.insert(
         String::from("command"),
         Box::from(command::compatibility::Compatibility::new().await),
+    );
+
+    #[cfg(feature = "simulate")]
+    service_map.insert(
+        String::from("simulate"),
+        Box::from(simulate::compatibility::Compatibility::new().await),
     );
 
     let mut core_compatibility = core::compatibility::Compatibility::new().await;

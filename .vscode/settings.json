@@ -3,7 +3,8 @@
     "ble",
     "http",
     "win_notification",
-    "command"
+    "command",
+    "simulate"
   ],
   "rust-analyzer.procMacro.enable": false
 }
