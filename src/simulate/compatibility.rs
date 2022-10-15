@@ -41,9 +41,10 @@ impl CompatibilityBehavior for Compatibility {
 
         match parsed_data.export.as_str() {
             "keys" => {
-                self.simulate
+                let result = self
+                    .simulate
                     .keys(&parsed_data.arguments[0].to_owned().to_string());
-                socket.send(&serde_json::json!({"id": id, "result": ""}).to_string())
+                socket.send(&serde_json::json!({"id": id, "result": result}).to_string())
             }
             _ => {
                 println!("Export not found.")

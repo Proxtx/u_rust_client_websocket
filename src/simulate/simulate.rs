@@ -12,7 +12,10 @@ impl Simulate {
         }
     }
 
-    pub fn keys(&mut self, sequence: &str) {
-        self.enigo.key_sequence_parse(sequence);
+    pub fn keys(&mut self, sequence: &str) -> bool {
+        match self.enigo.key_sequence_parse_try(sequence) {
+            Ok(_) => return true,
+            Err(_) => return false,
+        };
     }
 }
