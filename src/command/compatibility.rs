@@ -46,6 +46,12 @@ impl CompatibilityBehavior for Compatibility {
                 let result = self.command.command(config);
                 socket.send(&serde_json::json!({"id": id, "result": result}).to_string())
             }
+            "command_async" => {
+                let config: CommandConfiguration =
+                    serde_json::from_value(parsed_data.arguments[0].to_owned()).unwrap();
+                self.command.command_async(config);
+                socket.send(&serde_json::json!({"id": id, "result": ""}).to_string())
+            }
             _ => {
                 println!("Export not found.")
             }
