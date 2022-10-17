@@ -37,6 +37,8 @@ impl CompatibilityBehavior for Compatibility {
             }
         }
 
+        println!("{}", parsed_data.export);
+
         match parsed_data.export.as_str() {
             "screenshot" => {
                 let mut args_iter = parsed_data.arguments.into_iter();
