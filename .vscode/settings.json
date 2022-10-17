@@ -4,7 +4,8 @@
     "http",
     "win_notification",
     "command",
-    "simulate"
+    "simulate",
+    "screen"
   ],
   "rust-analyzer.procMacro.enable": false
 }
