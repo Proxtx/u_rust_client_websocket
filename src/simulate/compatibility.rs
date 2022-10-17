@@ -43,7 +43,8 @@ impl CompatibilityBehavior for Compatibility {
             "keys" => {
                 let result = self
                     .simulate
-                    .keys(&parsed_data.arguments[0].to_owned().to_string());
+                    .keys(&parsed_data.arguments[0].to_owned().to_string())
+                    .await;
                 socket.send(&serde_json::json!({"id": id, "result": result}).to_string())
             }
             _ => {
