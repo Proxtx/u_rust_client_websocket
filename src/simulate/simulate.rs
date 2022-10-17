@@ -21,9 +21,12 @@ impl Simulate {
                 let mut section_split = section.split("}");
                 let command = section_split.nth(0).unwrap();
                 match command {
-                    "+WAIT" => std::thread::sleep(std::time::Duration::from_millis(
-                        u64::from_str_radix(section_split.nth(0).unwrap(), 10).unwrap(),
-                    )),
+                    "+WAIT" => {
+                        tokio::time::sleep(tokio::time::Duration::from_millis(
+                            u64::from_str_radix(section_split.nth(0).unwrap(), 10).unwrap(),
+                        ))
+                        .await;
+                    }
                     "-WAIT" => {}
                     "+SHIFT" => self.enigo.key_down(Key::Shift),
                     "-SHIFT" => self.enigo.key_up(Key::Shift),
