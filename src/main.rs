@@ -42,6 +42,8 @@ async fn main() {
         let mut stream = ReceiverStream::new(socket_receiver).map(Ok);
         socket_sink.send_all(&mut stream).await.unwrap();
     });
+
+    #[cfg(feature = "ble")]
     let ble_module = Arc::new(tokio::sync::Mutex::new(
         ble::compatibility::Compatibility::new().await,
     ));
