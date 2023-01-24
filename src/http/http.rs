@@ -41,7 +41,7 @@ impl Http {
                     .await;
             }
             "GET" => {
-                result = self.client.get(url).send().await;
+                result = self.client.get(url).timeout(timeout).send().await;
             }
             _ => {
                 return RequestResult {
