@@ -5,7 +5,6 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_tungstenite::connect_async;
 mod compatibility;
 use serde::Deserialize;
-use std::sync::Arc;
 mod args;
 mod core;
 use clap::Parser;
@@ -44,12 +43,13 @@ async fn main() {
     });
 
     #[cfg(feature = "ble")]
-    let ble_module = Arc::new(tokio::sync::Mutex::new(
+    let ble_module = std::sync::Arc::new(tokio::sync::Mutex::new(
         ble::compatibility::Compatibility::new().await,
     ));
 
     while let Some(msg_wrapped) = socket_stream.next().await {
         let socket_sender = socket_sender.clone();
+        #[cfg(feature = "ble")]
         let ble_module = ble_module.clone();
         tokio::spawn(async move {
             let msg = msg_wrapped.unwrap().to_string();
