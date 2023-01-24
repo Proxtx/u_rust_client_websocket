@@ -1,7 +1,8 @@
 use serde::Deserialize;
 
+use crate::compatibility::CompatibilityBehavior;
 use crate::http::http;
-use crate::{websocket, CompatibilityBehavior};
+use crate::websocket;
 
 #[derive(Deserialize)]
 struct HttpData {
@@ -48,13 +49,16 @@ impl CompatibilityBehavior for Compatibility {
                         parsed_data.arguments[1].as_str().unwrap(),
                         parsed_data.arguments[2].as_str().unwrap(),
                         parsed_data.arguments[3].as_str().unwrap(),
-                        std::time::Duration::from_millis(
-                            parsed_data.arguments[4].as_u64().unwrap(),
-                        ),
+                        std::time::Duration::from_millis(match parsed_data.arguments.get(4) {
+                            Some(time) => time.as_u64().unwrap(),
+                            None => 5000,
+                        }),
                     )
                     .await;
 
-                websocket.send(&serde_json::json!({"id": id, "result": result}).to_string())
+                websocket
+                    .send(&serde_json::json!({"id": id, "result": result}).to_string())
+                    .await
             }
 
             _ => {

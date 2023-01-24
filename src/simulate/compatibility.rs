@@ -45,7 +45,9 @@ impl CompatibilityBehavior for Compatibility {
                     .simulate
                     .keys(&parsed_data.arguments[0].to_owned().to_string())
                     .await;
-                socket.send(&serde_json::json!({"id": id, "result": result}).to_string())
+                socket
+                    .send(&serde_json::json!({"id": id, "result": result}).to_string())
+                    .await
             }
             _ => {
                 println!("Export not found.")

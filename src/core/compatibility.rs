@@ -45,17 +45,25 @@ impl Compatibility {
 
         match parsed_data.export.as_str() {
             "services" => {
-                websocket.send(&serde_json::json!({"id": id, "result": services}).to_string());
+                websocket
+                    .send(&serde_json::json!({"id": id, "result": services}).to_string())
+                    .await;
             }
             "id" => {
-                websocket.send(&serde_json::json!({"id": id, "result": args.id}).to_string());
+                websocket
+                    .send(&serde_json::json!({"id": id, "result": args.id}).to_string())
+                    .await;
             }
             "key" => {
-                websocket.send(&serde_json::json!({"id": id, "result": args.key}).to_string());
+                websocket
+                    .send(&serde_json::json!({"id": id, "result": args.key}).to_string())
+                    .await;
             }
             "restart" => {
                 self.restart = true;
-                websocket.send(&serde_json::json!({ "id": id }).to_string());
+                websocket
+                    .send(&serde_json::json!({ "id": id }).to_string())
+                    .await;
             }
             _ => println!("Export not found!"),
         }

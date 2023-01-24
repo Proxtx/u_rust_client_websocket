@@ -44,7 +44,9 @@ impl CompatibilityBehavior for Compatibility {
                 let config: WinNotificationConfiguration =
                     serde_json::from_value(parsed_data.arguments[0].to_owned()).unwrap();
                 let result = self.win_notification.notification(config);
-                socket.send(&serde_json::json!({"id": id, "result": result}).to_string())
+                socket
+                    .send(&serde_json::json!({"id": id, "result": result}).to_string())
+                    .await
             }
             _ => {
                 println!("Export not found.")

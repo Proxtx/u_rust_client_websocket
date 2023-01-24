@@ -1,7 +1,7 @@
 use crate::websocket;
 
 #[async_trait::async_trait]
-pub trait CompatibilityBehavior {
+pub trait CompatibilityBehavior: Send + Sync {
     async fn new() -> Self
     where
         Self: Sized;

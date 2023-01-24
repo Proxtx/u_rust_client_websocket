@@ -55,10 +55,12 @@ impl CompatibilityBehavior for Compatibility {
         println!("{}", parsed_data.export);
         match parsed_data.export.as_str() {
             "start_scan" => {
-                websocket.send(
-                    &serde_json::json!({"id": id, "result": self.ble.start_scan().await})
-                        .to_string(),
-                );
+                websocket
+                    .send(
+                        &serde_json::json!({"id": id, "result": self.ble.start_scan().await})
+                            .to_string(),
+                    )
+                    .await;
             }
             "peripherals" => {
                 let peripherals = self.ble.peripherals().await;
@@ -85,20 +87,25 @@ impl CompatibilityBehavior for Compatibility {
                     })
                 }
                 websocket
-                    .send(&serde_json::json!({"id": id, "result": peripherals_parsed}).to_string());
+                    .send(&serde_json::json!({"id": id, "result": peripherals_parsed}).to_string())
+                    .await;
             }
             "connect" => {
                 let mut args_iter = parsed_data.arguments.into_iter();
                 let arg1: String = serde_json::from_value(args_iter.next().unwrap()).unwrap();
-                websocket.send(
-                    &serde_json::json!({"id": id, "result": self.ble.connect(&arg1).await})
-                        .to_string(),
-                );
+                websocket
+                    .send(
+                        &serde_json::json!({"id": id, "result": self.ble.connect(&arg1).await})
+                            .to_string(),
+                    )
+                    .await;
             }
-            "discover_services" => websocket.send(
-                &serde_json::json!({"id": id, "result": self.ble.discover_services().await})
-                    .to_string(),
-            ),
+            "discover_services" => websocket
+                .send(
+                    &serde_json::json!({"id": id, "result": self.ble.discover_services().await})
+                        .to_string(),
+                )
+                .await,
             "write_to_uuid" => {
                 let mut args_iter = parsed_data.arguments.into_iter();
 
@@ -114,19 +121,26 @@ impl CompatibilityBehavior for Compatibility {
                     }
                 };
                 let arg2: Vec<u8> = serde_json::from_value(args_iter.next().unwrap()).unwrap();
-                websocket.send(&serde_json::json!({"id": id, "result": self.ble.write_to_uuid(arg1, arg2).await}).to_string());
+                websocket.send(&serde_json::json!({"id": id, "result": self.ble.write_to_uuid(arg1, arg2).await}).to_string()).await;
             }
             "connected_status" => {
                 let mut connected = true;
                 if let None = self.ble.connected_peripheral {
                     connected = false;
                 }
-                websocket.send(&serde_json::json!({"id": id, "result": connected}).to_string());
+                websocket
+                    .send(&serde_json::json!({"id": id, "result": connected}).to_string())
+                    .await;
             }
 
-            "disconnect" => websocket.send(
-                &serde_json::json!({"id": id, "result": self.ble.disconnect().await}).to_string(),
-            ),
+            "disconnect" => {
+                websocket
+                    .send(
+                        &serde_json::json!({"id": id, "result": self.ble.disconnect().await})
+                            .to_string(),
+                    )
+                    .await
+            }
 
             _ => println!("export not found"),
         }

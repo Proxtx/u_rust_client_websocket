@@ -1,56 +1,18 @@
-use tungstenite::{connect, Message};
-use url::Url;
+use tokio::sync::mpsc::Sender;
+use tokio_tungstenite::tungstenite::Message;
 
 pub struct SocketConnection {
-    pub socket: tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>,
-    pub url: String,
+    sender: Sender<Message>,
 }
 
 impl SocketConnection {
-    pub fn new(url: &str) -> Self {
+    pub fn new(socket_sender: Sender<Message>) -> Self {
         SocketConnection {
-            socket: generate_socket(url),
-            url: url.to_string(),
+            sender: socket_sender,
         }
     }
 
-    pub fn send(&mut self, msg: &str) {
-        self.socket
-            .write_message(Message::Text(msg.to_string()))
-            .expect("Error sending websocket message.");
+    pub async fn send(&self, msg: &str) {
+        self.sender.send(Message::from(msg)).await.unwrap();
     }
-
-    pub fn reconnect(&mut self) {
-        self.socket = generate_socket(&self.url);
-    }
-
-    pub fn read_message(&mut self) -> String {
-        match self.socket.read_message() {
-            Ok(msg) => msg.to_text().unwrap().to_string(),
-            Err(_) => {
-                self.reconnect();
-                String::from("")
-            }
-        }
-    }
-}
-
-fn generate_socket(
-    url: &str,
-) -> tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>> {
-    let socket;
-
-    loop {
-        match connect(Url::parse(url).unwrap()) {
-            Ok((inner_socket, _response)) => {
-                socket = inner_socket;
-                break;
-            }
-            Err(_) => println!("error connecting. retry"),
-        }
-
-        std::thread::sleep(std::time::Duration::from_secs(5));
-    }
-
-    socket
 }

@@ -45,10 +45,17 @@ impl CompatibilityBehavior for Compatibility {
                 let arg1: u8 = serde_json::from_value(args_iter.next().unwrap()).unwrap();
 
                 let result = self.screen.screenshot(arg1.into());
-                socket.send(&serde_json::json!({"id": id, "result": result}).to_string())
+                socket
+                    .send(&serde_json::json!({"id": id, "result": result}).to_string())
+                    .await
             }
-            "screens" => socket
-                .send(&serde_json::json!({"id": id, "result": self.screen.screens()}).to_string()),
+            "screens" => {
+                socket
+                    .send(
+                        &serde_json::json!({"id": id, "result": self.screen.screens()}).to_string(),
+                    )
+                    .await
+            }
             _ => {
                 println!("Export not found.")
             }
