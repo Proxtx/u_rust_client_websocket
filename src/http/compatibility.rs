@@ -48,6 +48,9 @@ impl CompatibilityBehavior for Compatibility {
                         parsed_data.arguments[1].as_str().unwrap(),
                         parsed_data.arguments[2].as_str().unwrap(),
                         parsed_data.arguments[3].as_str().unwrap(),
+                        std::time::Duration::from_millis(
+                            parsed_data.arguments[4].as_u64().unwrap(),
+                        ),
                     )
                     .await;
 

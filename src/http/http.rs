@@ -25,6 +25,7 @@ impl Http {
         url: &str,
         body: &str,
         content_type: &str,
+        timeout: std::time::Duration,
     ) -> RequestResult {
         let result;
 
@@ -35,6 +36,7 @@ impl Http {
                     .post(url)
                     .body(body.to_owned())
                     .header("content-type", content_type)
+                    .timeout(timeout)
                     .send()
                     .await;
             }
