@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use crate::compatibility::CompatibilityBehavior;
 use futures_util::stream::StreamExt;
 use futures_util::SinkExt;
