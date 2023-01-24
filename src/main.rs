@@ -36,7 +36,8 @@ struct ServiceRequest {
 
 #[tokio::main]
 async fn main() {
-    let (ws_stream, _) = connect_async("ws://localhost:8080").await.unwrap();
+    let args = args::Args::parse();
+    let (ws_stream, _) = connect_async(args.ws_url).await.unwrap();
     let (mut socket_sink, mut socket_stream) = ws_stream.split();
     let (socket_sender, socket_receiver) = tokio::sync::mpsc::channel(32);
     tokio::spawn(async move {
