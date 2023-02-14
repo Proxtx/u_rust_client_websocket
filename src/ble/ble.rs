@@ -9,6 +9,26 @@ pub struct BLEManager {
     pub connected_peripheral: Option<Peripheral>,
 }
 
+pub struct Result {
+    pub success: bool,
+    pub error: Option<String>,
+}
+
+fn error_to_string(error: btleplug::Error) -> String {
+    match error {
+        btleplug::Error::PermissionDenied => String::from("Permission Denied"),
+        btleplug::Error::DeviceNotFound => String::from("Device not found"),
+        btleplug::Error::NotConnected => String::from("Not Connected"),
+        btleplug::Error::InvalidBDAddr(_) => String::from("Invalid BD Address"),
+        btleplug::Error::NotSupported(error) => String::from(format!("Not Supported: {}", error)),
+        btleplug::Error::TimedOut(time) => {
+            String::from(format!("Time out waited {} seconds", time.as_secs()))
+        }
+        btleplug::Error::Uuid(_) => String::from("Uuid error"),
+        btleplug::Error::Other(_) => String::from("Other Error"),
+    }
+}
+
 impl BLEManager {
     pub async fn new() -> Self {
         let manager = Manager::new().await.unwrap();
@@ -22,29 +42,41 @@ impl BLEManager {
         }
     }
 
-    pub async fn start_scan(&mut self) -> bool {
+    pub async fn start_scan(&mut self) -> Result {
         match self.central.start_scan(ScanFilter::default()).await {
             Ok(_) => {}
-            Err(_) => {
+            Err(error) => {
                 if self.scanning {
-                    return true;
+                    return Result {
+                        success: true,
+                        error: Option::None,
+                    };
                 }
-                return false;
+                return Result {
+                    success: false,
+                    error: Option::Some(error_to_string(error)),
+                };
             }
         };
         self.scanning = true;
 
-        return true;
+        return Result {
+            success: true,
+            error: Option::None,
+        };
     }
 
     pub async fn peripherals(&mut self) -> Vec<Peripheral> {
         self.central.peripherals().await.unwrap()
     }
 
-    pub async fn connect(&mut self, address: &str) -> bool {
+    pub async fn connect(&mut self, address: &str) -> Result {
         match self.connected_peripheral {
             Some(_) => {
-                return false;
+                return Result {
+                    success: false,
+                    error: Option::Some(String::from("Already connected")),
+                };
             }
             None => {}
         }
@@ -54,33 +86,53 @@ impl BLEManager {
                 match p.connect().await {
                     Ok(_) => {
                         self.connected_peripheral = Option::Some(p);
-                        return true;
+                        return Result {
+                            success: true,
+                            error: Option::None,
+                        };
                     }
 
-                    Err(_) => return false,
+                    Err(error) => {
+                        return Result {
+                            success: false,
+                            error: Option::Some(error_to_string(error)),
+                        }
+                    }
                 }
             }
         }
 
-        false
+        Result {
+            success: false,
+            error: Option::Some(String::from("Unknown Error")),
+        }
     }
 
-    pub async fn discover_services(&mut self) -> bool {
+    pub async fn discover_services(&mut self) -> Result {
         match &self.connected_peripheral {
             Some(peripheral) => {
                 peripheral.discover_services().await.unwrap();
-                return true;
+                return Result {
+                    success: true,
+                    error: Option::None,
+                };
             }
 
             None => {
-                return false;
+                return Result {
+                    success: false,
+                    error: Option::Some(String::from("Not connected")),
+                };
             }
         }
     }
 
-    pub async fn write_to_uuid(&mut self, uuid: uuid::Uuid, content: Vec<u8>) -> bool {
+    pub async fn write_to_uuid(&mut self, uuid: uuid::Uuid, content: Vec<u8>) -> Result {
         if let None = self.connected_peripheral {
-            return false;
+            return Result {
+                success: false,
+                error: Option::Some(String::from("Not connected")),
+            };
         }
 
         let peripheral = self.connected_peripheral.as_ref().unwrap();
@@ -89,7 +141,10 @@ impl BLEManager {
 
         match characteristics.iter().find(|c| c.uuid == uuid) {
             None => {
-                return false;
+                return Result {
+                    success: false,
+                    error: Option::Some(String::from("Characteristic not found")),
+                };
             }
 
             Some(inner_cmd_char) => {
@@ -102,30 +157,45 @@ impl BLEManager {
             .await
         {
             Ok(_) => {
-                return true;
+                return Result {
+                    success: true,
+                    error: Option::None,
+                };
             }
 
-            Err(_) => {
-                return false;
+            Err(error) => {
+                return Result {
+                    success: false,
+                    error: Option::Some(error_to_string(error)),
+                }
             }
         }
     }
 
-    pub async fn disconnect(&mut self) -> bool {
+    pub async fn disconnect(&mut self) -> Result {
         match &self.connected_peripheral {
             Some(peripheral) => match peripheral.disconnect().await {
                 Ok(_) => {
                     self.connected_peripheral = Option::None;
-                    return true;
+                    return Result {
+                        success: true,
+                        error: Option::None,
+                    };
                 }
-                Err(_) => {
+                Err(error) => {
                     self.connected_peripheral = Option::None;
-                    return false;
+                    return Result {
+                        success: false,
+                        error: Option::Some(error_to_string(error)),
+                    };
                 }
             },
 
             None => {
-                return false;
+                return Result {
+                    success: false,
+                    error: Option::Some(String::from("Not connected")),
+                };
             }
         }
     }

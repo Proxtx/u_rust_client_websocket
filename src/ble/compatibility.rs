@@ -55,9 +55,10 @@ impl CompatibilityBehavior for Compatibility {
         println!("{}", parsed_data.export);
         match parsed_data.export.as_str() {
             "start_scan" => {
+                let result = self.ble.start_scan().await;
                 websocket
                     .send(
-                        &serde_json::json!({"id": id, "result": self.ble.start_scan().await})
+                        &serde_json::json!({"id": id, "result": result.success, "error": result.error})
                             .to_string(),
                     )
                     .await;
@@ -93,19 +94,23 @@ impl CompatibilityBehavior for Compatibility {
             "connect" => {
                 let mut args_iter = parsed_data.arguments.into_iter();
                 let arg1: String = serde_json::from_value(args_iter.next().unwrap()).unwrap();
+                let result = self.ble.connect(&arg1).await;
                 websocket
                     .send(
-                        &serde_json::json!({"id": id, "result": self.ble.connect(&arg1).await})
+                        &serde_json::json!({"id": id, "result": result.success, "error": result.error})
                             .to_string(),
                     )
                     .await;
             }
-            "discover_services" => websocket
+            "discover_services" => {
+                let result = self.ble.discover_services().await;
+                websocket
                 .send(
-                    &serde_json::json!({"id": id, "result": self.ble.discover_services().await})
+                    &serde_json::json!({"id": id, "result": result.success, "error": result.error})
                         .to_string(),
                 )
-                .await,
+                .await
+            }
             "write_to_uuid" => {
                 let mut args_iter = parsed_data.arguments.into_iter();
 
@@ -121,7 +126,8 @@ impl CompatibilityBehavior for Compatibility {
                     }
                 };
                 let arg2: Vec<u8> = serde_json::from_value(args_iter.next().unwrap()).unwrap();
-                websocket.send(&serde_json::json!({"id": id, "result": self.ble.write_to_uuid(arg1, arg2).await}).to_string()).await;
+                let result = self.ble.write_to_uuid(arg1, arg2).await;
+                websocket.send(&serde_json::json!({"id": id, "result": result.success, "error": result.error}).to_string()).await;
             }
             "connected_status" => {
                 let mut connected = true;
@@ -134,9 +140,10 @@ impl CompatibilityBehavior for Compatibility {
             }
 
             "disconnect" => {
+                let result = self.ble.disconnect().await;
                 websocket
                     .send(
-                        &serde_json::json!({"id": id, "result": self.ble.disconnect().await})
+                        &serde_json::json!({"id": id, "result": result.success, "error": result.error})
                             .to_string(),
                     )
                     .await
