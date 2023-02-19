@@ -1,6 +1,7 @@
 use enigo::Enigo;
 use enigo::Key;
 use enigo::KeyboardControllable;
+use enigo::MouseControllable;
 
 pub struct Simulate {
     enigo: Enigo,
@@ -27,7 +28,19 @@ impl Simulate {
                         ))
                         .await;
                     }
+                    "+MOUSE" => {
+                        let mut coords_split = section_split.nth(0).unwrap().split(",");
+                        self.enigo.mouse_move_to(
+                            i32::from_str_radix(coords_split.nth(0).unwrap(), 10).unwrap(),
+                            i32::from_str_radix(coords_split.nth(0).unwrap(), 10).unwrap(),
+                        )
+                    }
+                    "-MOUSE" => {}
                     "-WAIT" => {}
+                    "+RIGHTMOUSE" => self.enigo.mouse_down(enigo::MouseButton::Right),
+                    "-RIGHTMOUSE" => self.enigo.mouse_up(enigo::MouseButton::Right),
+                    "+LEFTMOUSE" => self.enigo.mouse_down(enigo::MouseButton::Left),
+                    "-LEFTMOUSE" => self.enigo.mouse_up(enigo::MouseButton::Left),
                     "+SHIFT" => self.enigo.key_down(Key::Shift),
                     "-SHIFT" => self.enigo.key_up(Key::Shift),
                     "+CTRL" => self.enigo.key_down(Key::Control),
