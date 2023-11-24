@@ -52,7 +52,7 @@ async fn main() {
                 .unwrap()
                 .as_secs()
                 - last_update_secs
-                > 5 * 60
+                > 5 * 3
             {
                 std::process::exit(1);
             }
