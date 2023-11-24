@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 use crate::compatibility::CompatibilityBehavior;
 use futures_util::stream::StreamExt;
@@ -36,6 +36,30 @@ struct ServiceRequest {
 
 #[tokio::main]
 async fn main() {
+    let alive = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    ));
+
+    let alive_cl = alive.clone();
+    tokio::spawn(async move {
+        loop {
+            let last_update_secs = alive_cl.load(std::sync::atomic::Ordering::Relaxed);
+            if std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                - last_update_secs
+                > 5 * 60
+            {
+                std::process::exit(1);
+            }
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+        }
+    });
+
     let args = args::Args::parse();
     let (ws_stream, _) = connect_async(args.ws_url).await.unwrap();
     let (mut socket_sink, mut socket_stream) = ws_stream.split();
@@ -51,11 +75,22 @@ async fn main() {
     ));
 
     while let Some(msg_wrapped) = socket_stream.next().await {
+        alive.store(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            std::sync::atomic::Ordering::Relaxed,
+        );
         let socket_sender = socket_sender.clone();
         #[cfg(feature = "ble")]
         let ble_module = ble_module.clone();
         tokio::spawn(async move {
             let msg = msg_wrapped.unwrap().to_string();
+
+            if msg == "alive" {
+                return;
+            }
 
             let request_boxed: Result<ServiceRequest, serde_json::Error> =
                 serde_json::from_str(&msg);
